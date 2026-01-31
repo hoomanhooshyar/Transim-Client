@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="select_language">Select Language</string>
+    <string name="initiate_sync">Initiate Sync</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="shutdown">Shutdown</string>
+    <string name="live">Live</string>
+    <string name="vad_streaming">VAD STREAM: LISTENING</string>
+    <string name="mic_signal">MIC SIGNAL:</string>
+    <string name="lat">LAT: ~120MS</string>
+    <string name="relay_telemetry">>_RELAY TELEMETRY</string>
+    <string name="export_session">Export Session</string>
+</resources>

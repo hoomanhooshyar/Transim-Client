@@ -1,0 +1,36 @@
+package com.hooman.transim.domain.models
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+
+/**
+ * پیام‌هایی که از سرور به موبایل می‌آیند
+ */
+
+@Serializable
+sealed class ServerMessage {
+
+    // ۱. تکه صدای ترجمه شده (برای پخش)
+    @Serializable
+    @SerialName("audio_delta")
+    data class AudioDelta(
+        val data: String //BAse64
+    ): ServerMessage()
+
+    // ۲. متن ترجمه یا صحبت کاربر (برای نمایش در UI)
+    @Serializable
+    @SerialName("transcript")
+    data class Transcript(
+        val text: String,
+        val isFinal: Boolean, // آیا جمله تمام شده؟
+        val agentId: String
+    ): ServerMessage()
+
+    @Serializable
+    @SerialName("error")
+    data class Error(
+        val code: Int,
+        val message: String
+    ): ServerMessage()
+}
