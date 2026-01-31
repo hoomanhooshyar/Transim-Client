@@ -1,0 +1,6 @@
+
+pydantic
+protobuf
+pydantic-settings
+python-dotenv
+fastapi

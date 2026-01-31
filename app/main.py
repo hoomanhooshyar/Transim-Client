@@ -1,0 +1,12 @@
+from fastapi import FastAPI
+from app.api.endpoints import router
+from app.core.config import settings
+
+app = FastAPI(title="Gemini Relay Server")
+
+# اضافه کردن روت‌ها
+app.include_router(router)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
