@@ -11,6 +11,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class ServerMessage {
 
+    // ۰. پیام سیستمی (مثل READY)
+    @Serializable
+    @SerialName("system")
+    data class System(
+        val data: String
+    ): ServerMessage()
+
     // ۱. تکه صدای ترجمه شده (برای پخش)
     @Serializable
     @SerialName("audio_delta")

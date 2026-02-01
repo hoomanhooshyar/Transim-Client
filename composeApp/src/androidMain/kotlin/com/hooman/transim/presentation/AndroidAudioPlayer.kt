@@ -9,10 +9,8 @@ class AndroidAudioPlayer: AudioPlayer {
 
     private var audioTrack: AudioTrack? = null
 
-    // تنظیمات استاندارد Gemini (معمولاً 24kHz برای خروجی)
-    // اگر صدا "کند" پخش شد، این عدد را زیاد کنید (مثلا 24000)
-    // اگر صدا "تند" (نازک) پخش شد، این عدد را کم کنید (مثلا 16000)
-    private val SAMPLE_RATE = 16000
+    // تنظیمات استاندارد Gemini - خروجی صوتی Gemini 24kHz هست
+    private val SAMPLE_RATE = 24000
 
     init {
         try {

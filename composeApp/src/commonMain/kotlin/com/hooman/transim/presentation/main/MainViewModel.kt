@@ -87,6 +87,13 @@ class MainViewModel(
                 gender = gender
             ).collect { msg ->
                 when(msg){
+                    is ServerMessage.System -> {
+                        // پیام سیستمی (مثل READY)
+                        println("System message: ${msg.data}")
+                        if (msg.data == "READY") {
+                            _uiState.update { it.copy(lastTranscript = "Connected - Ready!") }
+                        }
+                    }
                     is ServerMessage.AudioDelta ->{
                         // صدای ترجمه رسید -> پخش کن
                         try {

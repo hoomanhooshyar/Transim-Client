@@ -75,12 +75,13 @@ class KtorTranslationRepository(
                     if (frame is Frame.Text) {
                         try {
                             val text = frame.readText()
-                            // چک کردن پیام READY از سرور (اختیاری ولی خوب است)
-                            if (text.contains("READY")) {
+                            val message = json.decodeFromString<ServerMessage>(text)
+                            
+                            // چک کردن پیام READY از سرور
+                            if (message is ServerMessage.System && message.data == "READY") {
                                 println("TransimRepo: Server is READY!")
                             }
-
-                            val message = json.decodeFromString<ServerMessage>(text)
+                            
                             emit(message)
                         } catch (e: Exception) {
                             println("Error parsing message: ${e.message}")
