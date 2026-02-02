@@ -62,6 +62,10 @@ async def websocket_endpoint(mobile_ws: WebSocket):
             relay_service.agents["AGENT_C"].session = session_c
 
             print("✅ All Agents Ready!")
+            print(f"   AGENT_A session: {relay_service.agents['AGENT_A'].session is not None}")
+            print(f"   AGENT_B session: {relay_service.agents['AGENT_B'].session is not None}")
+            print(f"   AGENT_C session: {relay_service.agents['AGENT_C'].session is not None}")
+            print(f"   Active agent: {relay_service.active_agent_id}")
 
             # اعلام آمادگی به موبایل
             await mobile_ws.send_text(ServerMessage(type="system", data="READY").model_dump_json())
@@ -117,7 +121,16 @@ async def websocket_endpoint(mobile_ws: WebSocket):
                                 print(f"🎤 Received Audio Chunk #{chunk_count}")
                             current_agent = relay_service.active_agent
                             active_id = relay_service.active_agent_id
-                            if current_agent.session:
+                            
+                            if current_agent is None:
+                                print(f"⚠️ current_agent is None!")
+                                continue
+                                
+                            if current_agent.session is None:
+                                print(f"⚠️ Session for {active_id} is None!")
+                                continue
+                            
+                            try:
                                 pcm_bytes = base64.b64decode(message.data)
                                 r_input = LiveClientRealtimeInput(
                                     media_chunks=[Blob(mime_type="audio/pcm;rate=16000", data=pcm_bytes)]
@@ -125,19 +138,11 @@ async def websocket_endpoint(mobile_ws: WebSocket):
                                 await current_agent.session.send(input=r_input)
                                 if chunk_count % 30 == 0:
                                     print(f"📤 Sent audio chunk #{chunk_count} to {active_id}")
-                            else:
-                                print(f"⚠️ Session for {active_id} is None!")
+                            except Exception as send_error:
+                                print(f"❌ Error sending audio to {active_id}: {send_error}")
 
                         elif message.type == "cycle_agent":
-                            # ابتدا به agent فعلی بگو که نوبت تموم شده
-                            current_agent = relay_service.active_agent
-                            current_id = relay_service.active_agent_id
-                            if current_agent.session:
-                                print(f"🛑 Sending turn_complete to {current_id}")
-                                turn_complete_msg = LiveClientContent(turnComplete=True)
-                                await current_agent.session.send(input=turn_complete_msg)
-                            
-                            # سپس به agent بعدی سوئیچ کن
+                            # فقط به agent بعدی سوئیچ کن - بدون ارسال turn_complete
                             new_agent = relay_service.cycle_agent()
                             print(f"🔄 Switched to {new_agent}")
                             sys_msg = ServerMessage(type="system", data=f"Switched to {new_agent}")
