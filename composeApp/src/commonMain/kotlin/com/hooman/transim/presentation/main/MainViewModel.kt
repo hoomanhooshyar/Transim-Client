@@ -94,7 +94,7 @@ class MainViewModel(
                             _uiState.update { it.copy(lastTranscript = "Connected - Ready!") }
                         }
                     }
-                    is ServerMessage.AudioDelta ->{
+                    is ServerMessage.Audio ->{
                         // صدای ترجمه رسید -> پخش کن
                         try {
                             val audioBytes = msg.data.decodeBase64Bytes()
@@ -103,10 +103,10 @@ class MainViewModel(
                             println("Audio decode Error: ${e.message}")
                         }
                     }
-                    is ServerMessage.Transcript->{
+                    is ServerMessage.Text ->{
                         // متن رسید -> نمایش بده
                         _uiState.update {
-                            it.copy(lastTranscript = "${msg.agentId}: ${msg.text}")
+                            it.copy(lastTranscript = msg.data)
                         }
                     }
                     is ServerMessage.Error->{

@@ -20,18 +20,16 @@ sealed class ServerMessage {
 
     // ۱. تکه صدای ترجمه شده (برای پخش)
     @Serializable
-    @SerialName("audio_delta")
-    data class AudioDelta(
-        val data: String //BAse64
+    @SerialName("audio")
+    data class Audio(
+        val data: String //Base64
     ): ServerMessage()
 
     // ۲. متن ترجمه یا صحبت کاربر (برای نمایش در UI)
     @Serializable
-    @SerialName("transcript")
-    data class Transcript(
-        val text: String,
-        val isFinal: Boolean, // آیا جمله تمام شده؟
-        val agentId: String
+    @SerialName("text")
+    data class Text(
+        val data: String
     ): ServerMessage()
 
     @Serializable
