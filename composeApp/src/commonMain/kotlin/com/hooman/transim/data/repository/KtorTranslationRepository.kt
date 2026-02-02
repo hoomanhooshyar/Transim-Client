@@ -43,13 +43,12 @@ class KtorTranslationRepository(
                 println("TransimRepo: Socket Opened!")
 
                 // تغییر ۲: ارسال کانفیگ (Handshake) به عنوان اولین پیام
-                // نکته: مطمئن شوید کلاس ClientMessage.Config فیلد type="config" را دارد
-                val configMsg = ClientMessage.Config(
+                val configMsg: ClientMessage = ClientMessage.Config(
                     hostLanguage = hostLang,
                     targetLanguage = targetLang,
                     voiceGender = gender
                 )
-                val configJson = json.encodeToString(configMsg)
+                val configJson = json.encodeToString<ClientMessage>(configMsg)
                 println("TransimRepo: Sending Handshake -> $configJson")
                 send(Frame.Text(configJson))
 
@@ -61,8 +60,8 @@ class KtorTranslationRepository(
                 val sendJob = launch {
                     for (msg in outgoingMessages) {
                         try {
-                            // فقط پیام‌های غیر از کانفیگ را می‌فرستد (چون کانفیگ قبلا رفته)
-                            val jsonStr = json.encodeToString(msg)
+                            // Serialize as base type to include 'type' discriminator
+                            val jsonStr = json.encodeToString<ClientMessage>(msg)
                             send(Frame.Text(jsonStr))
                         } catch (e: Exception) {
                             println("Error sending Message: ${e.message}")
