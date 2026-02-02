@@ -68,29 +68,39 @@ async def websocket_endpoint(mobile_ws: WebSocket):
 
             # --- حلقه‌های اصلی ---
             async def listen_to_agent(agent_id: str, session):
+                print(f"🎧 Starting listener for {agent_id}...")
                 try:
                     async for response in session.receive():
+                        print(f"📨 [{agent_id}] Received response from Gemini")
                         if agent_id == relay_service.active_agent_id:
                             server_content = response.server_content
-                            if server_content is None: continue
+                            if server_content is None:
+                                print(f"⚠️ [{agent_id}] server_content is None")
+                                continue
 
                             model_turn = server_content.model_turn
                             if model_turn:
+                                print(f"🗣️ [{agent_id}] Got model_turn with {len(model_turn.parts)} parts")
                                 for part in model_turn.parts:
                                     if part.inline_data:
                                         b64 = base64.b64encode(part.inline_data.data).decode('utf-8')
                                         msg = ServerMessage(type="audio", data=b64)
                                         await mobile_ws.send_text(msg.model_dump_json())
+                                        print(f"🔊 [{agent_id}] Sent audio to mobile ({len(b64)} bytes)")
                                     if part.text:
                                         msg = ServerMessage(type="text", data=part.text)
                                         await mobile_ws.send_text(msg.model_dump_json())
-                                        print(f"🔵 {agent_id}: {part.text[:30]}...")
+                                        print(f"📝 [{agent_id}]: {part.text[:50]}...")
 
                             if server_content.turn_complete:
                                 print(f"🏁 Turn Complete ({agent_id})")
+                        else:
+                            print(f"⏸️ [{agent_id}] Ignoring response (not active agent)")
 
                 except Exception as e:
-                    print(f"Error {agent_id}: {e}")
+                    import traceback
+                    print(f"❌ Error {agent_id}: {e}")
+                    traceback.print_exc()
 
             async def listen_to_mobile():
                 chunk_count = 0
@@ -106,22 +116,30 @@ async def websocket_endpoint(mobile_ws: WebSocket):
                             if chunk_count % 30 == 0:
                                 print(f"🎤 Received Audio Chunk #{chunk_count}")
                             current_agent = relay_service.active_agent
+                            active_id = relay_service.active_agent_id
                             if current_agent.session:
                                 pcm_bytes = base64.b64decode(message.data)
                                 r_input = LiveClientRealtimeInput(
                                     media_chunks=[Blob(mime_type="audio/pcm;rate=16000", data=pcm_bytes)]
                                 )
                                 await current_agent.session.send(input=r_input)
+                                if chunk_count % 30 == 0:
+                                    print(f"📤 Sent audio chunk #{chunk_count} to {active_id}")
+                            else:
+                                print(f"⚠️ Session for {active_id} is None!")
 
                         elif message.type == "cycle_agent":
                             new_agent = relay_service.cycle_agent()
+                            print(f"🔄 Switching to {new_agent}")
                             sys_msg = ServerMessage(type="system", data=f"Switched to {new_agent}")
                             await mobile_ws.send_text(sys_msg.model_dump_json())
 
                     except WebSocketDisconnect:
                         raise
                     except Exception as e:
-                        print(f"Mobile Loop Error: {e}")
+                        import traceback
+                        print(f"❌ Mobile Loop Error: {e}")
+                        traceback.print_exc()
 
             await asyncio.gather(
                 listen_to_agent("AGENT_A", session_a),
