@@ -4,7 +4,7 @@ import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.relay_service import create_relay_service
 from app.schemas.messages import MobileMessage, ServerMessage
-from google.genai.types import LiveClientRealtimeInput, Blob
+from google.genai.types import LiveClientRealtimeInput, LiveClientContent, Blob
 
 router = APIRouter()
 
@@ -129,8 +129,17 @@ async def websocket_endpoint(mobile_ws: WebSocket):
                                 print(f"⚠️ Session for {active_id} is None!")
 
                         elif message.type == "cycle_agent":
+                            # ابتدا به agent فعلی بگو که نوبت تموم شده
+                            current_agent = relay_service.active_agent
+                            current_id = relay_service.active_agent_id
+                            if current_agent.session:
+                                print(f"🛑 Sending turn_complete to {current_id}")
+                                turn_complete_msg = LiveClientContent(turnComplete=True)
+                                await current_agent.session.send(input=turn_complete_msg)
+                            
+                            # سپس به agent بعدی سوئیچ کن
                             new_agent = relay_service.cycle_agent()
-                            print(f"🔄 Switching to {new_agent}")
+                            print(f"🔄 Switched to {new_agent}")
                             sys_msg = ServerMessage(type="system", data=f"Switched to {new_agent}")
                             await mobile_ws.send_text(sys_msg.model_dump_json())
 
